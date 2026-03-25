@@ -1,0 +1,76 @@
+{
+  "name": "Voice Dictation to Eisenhower Task",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "skai/voice",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-start",
+      "name": "Webhook (Audio Input)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [ 250, 300 ]
+    },
+    {
+      "parameters": {
+        "model": "whisper-1",
+        "options": {}
+      },
+      "id": "openai-whisper",
+      "name": "OpenAI: Whisper Transcribe",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [ 450, 300 ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Extract intent: assignees, due date, duration, priority, and map to Eisenhower quadrant (Q1-Q4). JSON output.",
+        "options": {}
+      },
+      "id": "openai-intent",
+      "name": "OpenAI: Intent & Matrix Mapping",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [ 650, 300 ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO \"Task\" (title, description, quadrant, \"dueDate\", \"assignedTo\") VALUES ($1, $2, $3, $4, $5) RETURNING id;",
+        "options": {}
+      },
+      "id": "postgres-insert",
+      "name": "PostgreSQL: Insert Task",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [ 850, 300 ]
+    }
+  ],
+  "connections": {
+    "Webhook (Audio Input)": {
+      "main": [
+        [
+          { "node": "OpenAI: Whisper Transcribe", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "OpenAI: Whisper Transcribe": {
+      "main": [
+        [
+          { "node": "OpenAI: Intent & Matrix Mapping", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "OpenAI: Intent & Matrix Mapping": {
+      "main": [
+        [
+          { "node": "PostgreSQL: Insert Task", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}

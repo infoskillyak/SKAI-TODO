@@ -1,0 +1,73 @@
+{
+  "name": "AI Daily Auto-Planner",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [ { "field": "cronExpression", "expression": "0 2 * * *" } ] }
+      },
+      "id": "cron-trigger",
+      "name": "Schedule (2 AM Daily)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [ 250, 300 ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, title, \"estimatedDuration\" FROM \"Task\" WHERE quadrant IN ('Q1','Q2') AND status = 'TODO' AND \"dueDate\" >= CURRENT_DATE;"
+      },
+      "id": "postgres-get-tasks",
+      "name": "Get Q1/Q2 Tasks",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [ 450, 200 ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "options": {}
+      },
+      "id": "google-calendar-freebusy",
+      "name": "Google Calendar: Check FreeBusy",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [ 450, 400 ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "You are a master scheduler. Given the tasks and the free time blocks, find the optimal layout. Output an array mapping Task ID to Start and End times."
+      },
+      "id": "openai-scheduler",
+      "name": "GPT-4o Auto-Scheduling Logic",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [ 700, 300 ]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "calendarId": "primary"
+      },
+      "id": "google-calendar-create",
+      "name": "Google Calendar: Create Blocks",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [ 900, 300 ]
+    }
+  ],
+  "connections": {
+    "Schedule (2 AM Daily)": {
+      "main": [ [ { "node": "Get Q1/Q2 Tasks", "type": "main", "index": 0 }, { "node": "Google Calendar: Check FreeBusy", "type": "main", "index": 0 } ] ]
+    },
+    "Get Q1/Q2 Tasks": {
+      "main": [ [ { "node": "GPT-4o Auto-Scheduling Logic", "type": "main", "index": 0 } ] ]
+    },
+    "Google Calendar: Check FreeBusy": {
+      "main": [ [ { "node": "GPT-4o Auto-Scheduling Logic", "type": "main", "index": 0 } ] ]
+    },
+    "GPT-4o Auto-Scheduling Logic": {
+      "main": [ [ { "node": "Google Calendar: Create Blocks", "type": "main", "index": 0 } ] ]
+    }
+  }
+}

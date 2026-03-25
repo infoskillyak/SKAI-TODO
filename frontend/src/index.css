@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  --color-skai-dark: #0F172A;
+  --color-skai-card: #1E293B;
+  --color-skai-accent: #06B6D4;
+  --color-skai-accent-hover: #0891B2;
+  --color-skai-q1: #EF4444;
+  --color-skai-q2: #3B82F6;
+  --color-skai-q3: #F59E0B;
+  --color-skai-q4: #6B7280;
+}
+
+body {
+  background-color: var(--color-skai-dark);
+  color: #e2e8f0;
+  -webkit-font-smoothing: antialiased;
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.5;
+  font-size: clamp(14px, 1.5vw, 16px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+#root {
+  height: 100vh;
+}
+
+.quadrant-container {
+  background-color: var(--color-skai-card);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.task-card {
+  background-color: #1e293b;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  cursor: grab;
+  border: 1px solid rgba(100, 116, 139, 0.4);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.task-card:hover {
+  border-color: rgba(148, 163, 184, 0.6);
+}
+.task-card:active {
+  cursor: grabbing;
+}

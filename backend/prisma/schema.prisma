@@ -1,0 +1,390 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String             @id @default(uuid())
+  email              String             @unique
+  name               String
+  passwordHash       String
+  role               Role               @default(USER)
+  orgId              String?
+  stripeCustomerId   String?
+  plan               Plan               @default(FREE)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  // Email verification
+  emailVerified      Boolean            @default(false)
+  verificationToken  String?
+
+  // OAuth integrations
+  googleAccessToken  String?
+  googleRefreshToken String?
+  googleCalendarId   String?
+  outlookAccessToken String?
+  outlookRefreshToken String?
+  outlookCalendarId  String?
+  slackAccessToken   String?
+  slackTeamId        String?
+
+  organization       Organization?      @relation(fields: [orgId], references: [id])
+  tasksCreated       Task[]             @relation("TaskCreator")
+  tasksAssigned      Task[]             @relation("TaskAssignee")
+  taskComments       TaskComment[]
+  calendarEvents     CalendarEvent[]
+  aiUsageCredits     AiUsageCredit[]
+}
+
+model Organization {
+  id                 String             @id @default(uuid())
+  name               String
+  adminId            String
+  billingPlan        Plan               @default(FREE)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  users              User[]
+  tasks              Task[]
+  comments           TaskComment[]
+  calendarEvents     CalendarEvent[]
+  
+  // Payment relations
+  paymentConfigs     TenantPaymentConfig[]
+  paymentTransactions PaymentTransaction[]
+  recurringPayments  RecurringPayment[]
+  bankTransferConfig BankTransferConfig?
+}
+
+model Task {
+  id                  String            @id @default(uuid())
+  title               String
+  description         String?
+  quadrant            Quadrant
+  status              TaskStatus        @default(TODO)
+  dueDate             DateTime?
+  estimatedDuration   Int?              // Duration in minutes
+  energyLevel         Int?              // 1 to 5 scale
+  priorityScore       Float?
+  parentTaskId        String?
+  createdBy           String
+  assignedTo          String?
+  orgId               String
+  calendarEventId     String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  creator             User              @relation("TaskCreator", fields: [createdBy], references: [id])
+  assignee            User?             @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  organization        Organization      @relation(fields: [orgId], references: [id])
+  parentTask          Task?             @relation("Subtasks", fields: [parentTaskId], references: [id])
+  subtasks            Task[]            @relation("Subtasks")
+  comments            TaskComment[]
+}
+
+model TaskComment {
+  id                  String            @id @default(uuid())
+  taskId              String
+  userId              String
+  orgId               String
+  content             String
+  createdAt           DateTime          @default(now())
+
+  task                Task              @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization        Organization      @relation(fields: [orgId], references: [id])
+}
+
+model CalendarEvent {
+  id                  String            @id @default(uuid())
+  userId              String
+  orgId               String
+  providerEventId     String            // Google or Outlook event ID
+  provider            CalendarProvider
+  startAt             DateTime
+  endAt               DateTime
+  title               String
+  createdAt           DateTime          @default(now())
+
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization        Organization      @relation(fields: [orgId], references: [id])
+}
+
+model Subscription {
+  id                      String        @id @default(uuid())
+  stripeSubscriptionId    String        @unique
+  status                  String
+  currentPeriodEnd        DateTime
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+}
+
+model AiUsageCredit {
+  id                  String            @id @default(uuid())
+  userId              String
+  amount              Int               // Negative for consumption, positive for recharge
+  description         String
+  createdAt           DateTime          @default(now())
+
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id                  String            @id @default(uuid())
+  entityType          String
+  entityId            String
+  action              String
+  performedBy         String
+  createdAt           DateTime          @default(now())
+}
+
+model PlanPricing {
+  id                  String            @id @default(uuid())
+  plan                Plan              @unique
+  monthlyPrice        Float             @default(0)
+  yearlyPrice         Float             @default(0)
+  maxUsers            Int               @default(1)
+  maxTasks            Int               @default(-1) // -1 = unlimited
+  features            String[]          @default([])
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+}
+
+// ==================== Payment Integration ====================
+
+// Global payment providers enabled by Super Admin
+model GlobalPaymentProvider {
+  id                  String            @id @default(uuid())
+  name                String            @unique // RAZORPAY, PHONEPE, CASHFREE, UPI, BANK_TRANSFER
+  displayName         String
+  isEnabled           Boolean           @default(false)
+  isActive            Boolean           @default(true)
+  supportedMethods    String[]          @default([]) // UPI, CARD, WALLET, NETBANKING, BANK_TRANSFER, RECURRING
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+}
+
+// Tenant-specific payment configuration
+model TenantPaymentConfig {
+  id                  String            @id @default(uuid())
+  orgId               String            @unique
+  provider            String            // RAZORPAY, PHONEPE, CASHFREE, etc.
+  
+  // Encrypted credentials
+  keyId               String?           // Public key / Key ID
+  keySecret           String?           // Encrypted secret key
+  webhookSecret       String?           // Encrypted webhook secret
+  
+  // Provider-specific settings
+  settings            Json?             // Provider-specific JSON settings
+  
+  // Status
+  isActive            Boolean           @default(false)
+  enabledMethods      String[]          @default([]) // Which methods are enabled
+  
+  // Metadata
+  lastTestedAt        DateTime?
+  lastTestStatus      String?
+  
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  organization         Organization      @relation(fields: [orgId], references: [id])
+}
+
+// Payment transactions
+model PaymentTransaction {
+  id                  String            @id @default(uuid())
+  orgId               String
+  
+  // Transaction details
+  provider            String            // RAZORPAY, PHONEPE, CASHFREE
+  providerOrderId     String?          // Order ID from provider
+  providerPaymentId   String?          // Payment ID from provider
+  providerWebhookId   String?          // Webhook event ID
+  
+  // Amount & Currency
+  amount              Float
+  currency            String           @default("INR")
+  
+  // Status
+  status              PaymentStatus     @default(PENDING)
+  
+  // Customer info
+  customerEmail        String?
+  customerPhone       String?
+  customerName        String?
+  
+  // Payment method details
+  paymentMethod       String?           // UPI, CARD, WALLET, etc.
+  upiVpa             String?           // For UPI payments
+  cardLast4          String?           // For card payments (last 4 digits)
+  
+  // Billing
+  billingAddress      Json?
+  
+  // Metadata
+  description         String?
+  metadata            Json?
+  
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  organization         Organization      @relation(fields: [orgId], references: [id])
+}
+
+// Recurring payments / Subscriptions
+model RecurringPayment {
+  id                  String            @id @default(uuid())
+  orgId               String
+  
+  // Mandate details
+  provider            String            // RAZORPAY, PHONEPE, CASHFREE
+  providerMandateId   String?           // Mandate/Authorization ID
+  
+  // Recurring info
+  frequency          RecurringFrequency @default(monthly)
+  amount             Float
+  currency           String            @default("INR")
+  
+  // Status
+  status             RecurringStatus   @default(ACTIVE)
+  
+  // Customer
+  customerEmail       String
+  customerPhone      String
+  customerName       String
+  
+  // UPI Specific
+  upiVpa            String?
+  
+  // Start & End
+  startDate          DateTime
+  endDate            DateTime?
+  nextChargeDate     DateTime?
+  
+  // Metadata
+  metadata           Json?
+  
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  organization       Organization      @relation(fields: [orgId], references: [id])
+}
+
+// Manual Bank Transfer Details
+model BankTransferConfig {
+  id                  String            @id @default(uuid())
+  orgId               String            @unique
+  
+  // Bank Details (encrypted)
+  bankName            String
+  accountNumber       String            // Encrypted
+  accountHolderName   String
+  ifscCode           String
+  branchName          String?
+  
+  // Status
+  isActive            Boolean           @default(true)
+  instructions        String?           // Payment instructions for customers
+  
+  // Verification
+  isVerified          Boolean           @default(false)
+  verificationDocUrl  String?
+  
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  organization        Organization      @relation(fields: [orgId], references: [id])
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum RecurringFrequency {
+  daily
+  weekly
+  monthly
+  quarterly
+  yearly
+}
+
+enum RecurringStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+  EXPIRED
+  FAILED
+}
+
+model SystemConfig {
+  id                  String            @id @default("global_config")
+  
+  // Payment Gateway
+  paymentGateway      String            @default("razorpay")
+  razorpayKeyId       String?
+  razorpayKeySecret   String?
+  razorpayWebhookSecret String?
+  stripePublishableKey String?
+  stripeSecretKey      String?
+  stripeWebhookSecret  String?
+  testMode            Boolean           @default(true)
+
+  // n8n Configuration
+  n8nBaseUrl          String            @default("https://n8n.todo.skillyak.com")
+  n8nApiKey           String?
+  n8nWebhookBaseUrl   String?
+  openaiApiKey        String?
+  whisperModel        String            @default("whisper-1")
+
+  // Domain Configuration
+  primaryDomain       String            @default("todo.skillyak.com")
+  apiSubdomain        String            @default("api.todo.skillyak.com")
+  n8nSubdomain        String            @default("n8n.todo.skillyak.com")
+  sslEnabled          Boolean           @default(true)
+
+  updatedAt           DateTime          @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+  VIEWER
+  SUPERADMIN
+}
+
+enum Plan {
+  FREE
+  PRO
+  TEAM
+  ENTERPRISE
+}
+
+enum Quadrant {
+  Q1 // Urgent & Important
+  Q2 // Not Urgent & Important
+  Q3 // Urgent & Not Important
+  Q4 // Not Urgent & Not Important
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum CalendarProvider {
+  GOOGLE
+  OUTLOOK
+}

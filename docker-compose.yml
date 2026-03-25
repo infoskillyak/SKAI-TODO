@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: skai-todo-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-skai_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-skai_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-skai_todo}
+    ports:
+      - "5433:5432"
+    volumes:
+      - skai-todo-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-skai_admin} -d ${POSTGRES_DB:-skai_todo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: skai-todo-redis
+    restart: always
+    ports:
+      - "6380:6379"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: skai-todo-backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-skai_admin}:${POSTGRES_PASSWORD:-skai_secret}@postgres:5432/${POSTGRES_DB:-skai_todo}?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-supersecret}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    command: >
+      sh -c "npx prisma db push && npm run start:prod"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: skai-todo-frontend
+    restart: always
+    ports:
+      - "8082:80"
+
+volumes:
+  skai-todo-postgres-data:

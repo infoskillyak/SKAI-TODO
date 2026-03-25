@@ -1,0 +1,54 @@
+{
+  "name": "Conflict Resolver & Rescheduler",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook/calendar-update"
+      },
+      "id": "webhook-calendar",
+      "name": "Webhook: Calendar Conflict Alert",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [ 250, 300 ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM \"Task\" WHERE \"calendarEventId\" = $1"
+      },
+      "id": "postgres-check",
+      "name": "Identify Overlapping Task",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [ 450, 300 ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Reschedule the lower-priority task (Q3/Q4) to a later free block, or alert the user if it is a Q1 priority."
+      },
+      "id": "openai-conflict",
+      "name": "GPT-4o Priority Resolver",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [ 650, 300 ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendarId": "primary"
+      },
+      "id": "google-calendar-update",
+      "name": "Google Calendar: Shift Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [ 850, 300 ]
+    }
+  ],
+  "connections": {
+    "Webhook: Calendar Conflict Alert": { "main": [ [ { "node": "Identify Overlapping Task", "type": "main", "index": 0 } ] ] },
+    "Identify Overlapping Task": { "main": [ [ { "node": "GPT-4o Priority Resolver", "type": "main", "index": 0 } ] ] },
+    "GPT-4o Priority Resolver": { "main": [ [ { "node": "Google Calendar: Shift Event", "type": "main", "index": 0 } ] ] }
+  }
+}

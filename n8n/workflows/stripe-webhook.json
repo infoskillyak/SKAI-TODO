@@ -1,0 +1,58 @@
+{
+  "name": "Stripe Webhook -> Plan Upgrade",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stripe/webhook-n8n",
+        "options": {}
+      },
+      "id": "webhook-stripe",
+      "name": "Webhook (Stripe Payload)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [ 250, 300 ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            { "value1": "={{$json.body.type}}", "operation": "equal", "value2": "customer.subscription.updated" }
+          ]
+        }
+      },
+      "id": "if-node",
+      "name": "If Subscription Upgraded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [ 450, 300 ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE \"User\" SET plan = 'PRO' WHERE \"stripeCustomerId\" = $1"
+      },
+      "id": "postgres-update",
+      "name": "Update User Plan",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [ 650, 200 ]
+    },
+    {
+      "parameters": {
+        "channel": "C123456",
+        "text": "New Pro Subscription activated for user!"
+      },
+      "id": "slack-notify",
+      "name": "Slack: Notify Admins",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [ 850, 200 ]
+    }
+  ],
+  "connections": {
+    "Webhook (Stripe Payload)": { "main": [ [ { "node": "If Subscription Upgraded?", "type": "main", "index": 0 } ] ] },
+    "If Subscription Upgraded?": { "main": [ [ { "node": "Update User Plan", "type": "main", "index": 0 } ] ] },
+    "Update User Plan": { "main": [ [ { "node": "Slack: Notify Admins", "type": "main", "index": 0 } ] ] }
+  }
+}

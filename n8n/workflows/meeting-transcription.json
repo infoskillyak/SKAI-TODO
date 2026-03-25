@@ -1,0 +1,63 @@
+{
+  "name": "Meeting Action Items Extractor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "skai/meeting",
+        "options": {}
+      },
+      "id": "webhook-meeting",
+      "name": "Webhook (Meeting Audio)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [ 250, 300 ]
+    },
+    {
+      "parameters": {
+        "model": "whisper-1",
+        "options": {}
+      },
+      "id": "openai-transcribe",
+      "name": "Whisper: Transcribe Long Audio",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [ 450, 300 ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Identify action items, assignees, and deadlines. Output array of JSON task objects.",
+        "options": {}
+      },
+      "id": "openai-extract",
+      "name": "GPT-4o: Extract Action Items",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [ 650, 300 ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO \"Task\" (title, \"assignedTo\", \"dueDate\", quadrant) VALUES ...",
+        "options": {}
+      },
+      "id": "postgres-bulk-insert",
+      "name": "PostgreSQL: Insert Extracted Tasks",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [ 850, 300 ]
+    }
+  ],
+  "connections": {
+    "Webhook (Meeting Audio)": {
+      "main": [ [ { "node": "Whisper: Transcribe Long Audio", "type": "main", "index": 0 } ] ]
+    },
+    "Whisper: Transcribe Long Audio": {
+      "main": [ [ { "node": "GPT-4o: Extract Action Items", "type": "main", "index": 0 } ] ]
+    },
+    "GPT-4o: Extract Action Items": {
+      "main": [ [ { "node": "PostgreSQL: Insert Extracted Tasks", "type": "main", "index": 0 } ] ]
+    }
+  }
+}

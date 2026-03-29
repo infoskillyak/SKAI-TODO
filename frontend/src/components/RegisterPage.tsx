@@ -26,7 +26,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--color-skai-bg)] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-skai-dark px-4">
       <div className="w-full max-w-md">
         <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-8">
           <div className="text-center mb-8">

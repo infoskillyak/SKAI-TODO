@@ -50,7 +50,7 @@ export default function CheckoutModal({ isOpen, onClose, plan, onPaymentComplete
 
       const orderResponse = await paymentService.createOrder({
         amount,
-        currency: 'INR', // Assuming INR for now
+        currency: 'USD',
         customerName: customerDetails.name,
         customerEmail: customerDetails.email,
         customerPhone: customerDetails.phone,
@@ -180,7 +180,7 @@ export default function CheckoutModal({ isOpen, onClose, plan, onPaymentComplete
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -188,13 +188,14 @@ export default function CheckoutModal({ isOpen, onClose, plan, onPaymentComplete
           }
 
           .modal-content {
-            background: white;
+            background: #1E293B;
             border-radius: 12px;
             padding: 0;
             max-width: 500px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
+            border: 1px solid #334155;
           }
 
           .modal-header {
@@ -208,6 +209,7 @@ export default function CheckoutModal({ isOpen, onClose, plan, onPaymentComplete
             margin: 0;
             font-size: 24px;
             font-weight: 600;
+            color: #e2e8f0;
           }
 
           .close-button {
@@ -215,12 +217,12 @@ export default function CheckoutModal({ isOpen, onClose, plan, onPaymentComplete
             border: none;
             font-size: 24px;
             cursor: pointer;
-            color: #666;
+            color: #94a3b8;
           }
 
           .plan-summary {
             padding: 24px;
-            background: #f8f9fa;
+            background: #0F172A;
             margin: 24px;
             margin-top: 12px;
             border-radius: 8px;
@@ -229,13 +231,14 @@ export default function CheckoutModal({ isOpen, onClose, plan, onPaymentComplete
           .plan-summary h3 {
             margin: 0 0 8px 0;
             font-size: 18px;
+            color: #e2e8f0;
           }
 
           .price {
             margin: 0;
             font-size: 24px;
             font-weight: 600;
-            color: #007bff;
+            color: #06B6D4;
           }
 
           .customer-details, .payment-options {
@@ -246,6 +249,7 @@ export default function CheckoutModal({ isOpen, onClose, plan, onPaymentComplete
           .customer-details h3, .payment-options h3 {
             margin-bottom: 16px;
             font-size: 18px;
+            color: #e2e8f0;
           }
 
           .form-group {
@@ -255,9 +259,16 @@ export default function CheckoutModal({ isOpen, onClose, plan, onPaymentComplete
           .form-group input {
             width: 100%;
             padding: 12px;
-            border: 1px solid #ddd;
+            border: 1px solid #334155;
             border-radius: 6px;
             font-size: 16px;
+            background: #0F172A;
+            color: #e2e8f0;
+            box-sizing: border-box;
+          }
+
+          .form-group input::placeholder {
+            color: #64748b;
           }
 
           .payment-methods {
@@ -270,19 +281,20 @@ export default function CheckoutModal({ isOpen, onClose, plan, onPaymentComplete
             display: flex;
             align-items: center;
             padding: 16px;
-            border: 2px solid #e9ecef;
+            border: 2px solid #334155;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
+            background: #0F172A;
           }
 
           .payment-method:hover {
-            border-color: #007bff;
+            border-color: #06B6D4;
           }
 
           .payment-method.selected {
-            border-color: #007bff;
-            background: #f8f9ff;
+            border-color: #06B6D4;
+            background: rgba(6, 182, 212, 0.1);
           }
 
           .payment-method input[type="radio"] {
@@ -293,6 +305,7 @@ export default function CheckoutModal({ isOpen, onClose, plan, onPaymentComplete
             display: flex;
             align-items: center;
             gap: 12px;
+            color: #e2e8f0;
           }
 
           .method-icon {
@@ -320,26 +333,27 @@ export default function CheckoutModal({ isOpen, onClose, plan, onPaymentComplete
           }
 
           .btn-primary {
-            background: #007bff;
+            background: #06B6D4;
             color: white;
           }
 
           .btn-primary:hover:not(:disabled) {
-            background: #0056b3;
+            background: #0891B2;
           }
 
           .btn-primary:disabled {
-            background: #ccc;
+            background: #334155;
             cursor: not-allowed;
+            color: #64748b;
           }
 
           .btn-secondary {
-            background: #6c757d;
-            color: white;
+            background: #334155;
+            color: #e2e8f0;
           }
 
           .btn-secondary:hover:not(:disabled) {
-            background: #545b62;
+            background: #475569;
           }
         `}</style>
       </div>

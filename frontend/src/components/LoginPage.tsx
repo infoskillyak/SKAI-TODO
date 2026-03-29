@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { RegisterPage } from './RegisterPage';
+import { authApi } from '../services/authService';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => void;
@@ -16,22 +17,34 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await onLogin(email, password);
-    setIsLoading(false);
+    try {
+      await onLogin(email, password);
+    } catch (error) {
+      // Error will be handled by the onLogin callback from App.tsx
+      console.error('Login failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (showRegister) {
     return <RegisterPage onBackToLogin={() => setShowRegister(false)} onRegister={async (email, password, name) => {
-      const response = await fetch('/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name })
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Registration failed');
+      try {
+        const response = await authApi.register({ email, password, name });
+        // Assuming the register API returns similar structure to login
+        if (response.data?.accessToken) {
+          const { accessToken, user } = response.data;
+          localStorage.setItem('skai_token', accessToken);
+          localStorage.setItem('skai_user', JSON.stringify(user));
+          onLogin(email, password); // This will trigger the login flow in App.tsx
+        } else {
+          // Fallback: just login with credentials if token not returned
+          onLogin(email, password);
+        }
+      } catch (error) {
+        console.error('Registration failed:', error);
+        throw new Error('Registration failed. Please try again.');
       }
-      onLogin(email, password);
     }} />;
   }
 

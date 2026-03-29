@@ -141,7 +141,10 @@ export class CalendarService {
     }
 
     // Get orgId from user
-    const orgId = user.orgId || 'default';
+    if (!user.orgId) {
+      throw new BadRequestException('User must belong to an organization to create calendar events');
+    }
+    const orgId = user.orgId;
 
     return this.prisma.calendarEvent.create({
       data: {

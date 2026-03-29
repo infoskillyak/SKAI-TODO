@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
 import { GripVertical, Clock, Zap } from 'lucide-react';
+import { TaskDetailModal } from './TaskDetailModal';
 
 type QuadrantType = 'Q1' | 'Q2' | 'Q3' | 'Q4';
 
@@ -26,6 +28,7 @@ const quadrantMeta: Record<QuadrantType, { title: string; subtitle: string; bord
 };
 
 export function MatrixBoard({ tasks, setTasks, onTaskMove }: MatrixBoardProps) {
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const onDragEnd = async (result: DropResult) => {
     const { source, destination } = result;
@@ -99,7 +102,8 @@ export function MatrixBoard({ tasks, setTasks, onTaskMove }: MatrixBoardProps) {
                             <div
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              className={`task-card flex items-start gap-3 ${snapshot.isDragging ? 'shadow-xl ring-2 ring-[var(--color-skai-accent)]/50 brightness-110' : ''}`}
+                              className={`task-card flex items-start gap-3 cursor-pointer ${snapshot.isDragging ? 'shadow-xl ring-2 ring-[var(--color-skai-accent)]/50 brightness-110' : ''}`}
+                              onClick={() => !snapshot.isDragging && setSelectedTask(task)}
                             >
                               <div {...provided.dragHandleProps} className="text-slate-600 hover:text-white mt-0.5 transition-colors">
                                 <GripVertical size={14} />
@@ -128,6 +132,21 @@ export function MatrixBoard({ tasks, setTasks, onTaskMove }: MatrixBoardProps) {
           })}
         </div>
       </DragDropContext>
+
+      {selectedTask && (
+        <TaskDetailModal
+          task={{
+            id: selectedTask.id,
+            title: selectedTask.content,
+            description: undefined,
+            quadrant: selectedTask.quadrant,
+            status: 'TODO',
+            duration: selectedTask.duration,
+            energyLevel: selectedTask.energyLevel,
+          }}
+          onClose={() => setSelectedTask(null)}
+        />
+      )}
     </div>
   );
 }

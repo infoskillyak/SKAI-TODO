@@ -24,8 +24,13 @@ export class RazorpayWebhookController {
       .digest('hex');
 
     if (signature !== expectedSignature) {
-      this.logger.error('Invalid Razorpay signature');
-      throw new UnauthorizedException('Invalid signature');
+      // Use timing-safe comparison to prevent timing attacks
+      const sigBuffer = Buffer.from(signature || '', 'utf8');
+      const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
+      if (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
+        this.logger.error('Invalid Razorpay signature');
+        throw new UnauthorizedException('Invalid signature');
+      }
     }
 
     // 2. Process Event (e.g., subscription.paid, payment.captured)

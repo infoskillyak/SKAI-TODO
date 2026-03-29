@@ -167,6 +167,7 @@ function App() {
           onClose={() => setShowVoice(false)}
           onTaskCreated={(task) => {
             console.log('Voice task created:', task);
+            fetchTasks();
             setShowVoice(false);
           }}
         />

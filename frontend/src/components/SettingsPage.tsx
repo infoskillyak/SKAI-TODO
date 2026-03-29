@@ -122,7 +122,7 @@ export function SettingsPage() {
       onClick={() => { onChange(!value); }}
       className={`w-11 h-6 rounded-full transition-colors relative ${value ? 'bg-[var(--color-skai-accent)]' : 'bg-slate-700'}`}
     >
-      <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-0.5 transition-transform ${value ? 'translate-x-5.5' : 'translate-x-0.5'}`} />
+      <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-0.5 transition-transform ${value ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
     </button>
   );
 

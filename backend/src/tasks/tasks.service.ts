@@ -54,7 +54,7 @@ export class TasksService {
     }
 
     const { creator, organization, ...rest } = data;
-    return this.prisma.task.create({
+    return this.prisma.forTenant(finalOrgId).task.create({
       data: {
         ...rest,
         creator: { connect: { id: userId } },

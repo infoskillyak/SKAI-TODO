@@ -98,8 +98,8 @@ class MobileAuditor:
         # --- 1. TOUCH PSYCHOLOGY CHECKS ---
 
         # 1.1 Touch Target Size Check
-        # Look for small touch targets explicitly defined
-        small_sizes = re.findall(r'<TouchableOpacity[^>]*style=\{\{\s*(?:width|height):\s*([0-3]\d)', content)
+        # Look for small touch targets
+        small_sizes = re.findall(r'(?:width|height|size):\s*([0-3]\d)', content)
         for size in small_sizes:
             if int(size) < 44:
                 self.issues.append(f"[Touch Target] {filename}: Touch target size {size}px < 44px minimum (iOS: 44pt, Android: 48dp)")

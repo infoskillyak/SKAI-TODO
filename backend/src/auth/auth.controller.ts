@@ -1,9 +1,11 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Req, Delete, Get, Patch } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Req, Delete, Get, Patch, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
 import { Roles } from './roles.decorator';
 import { Role } from '@prisma/client';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -11,21 +13,17 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  async login(@Body() signInDto: Record<string, any>) {
-    const user = await this.authService.validateUser(signInDto.email, signInDto.password);
+  async login(@Body() loginDto: LoginDto) {
+    const user = await this.authService.validateUser(loginDto.email, loginDto.password);
     if (!user) {
-      return { statusCode: 401, message: 'Invalid credentials' };
+      throw new UnauthorizedException('Invalid credentials');
     }
     return this.authService.login(user);
   }
 
   @Post('register')
-  async register(@Body() registerDto: Record<string, any>) {
-    try {
-      return await this.authService.register(registerDto);
-    } catch (error: any) {
-      return { statusCode: error.status || 400, message: error.message || 'Registration failed' };
-    }
+  async register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
   }
 
   // Self-delete account

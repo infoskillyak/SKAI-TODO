@@ -475,13 +475,19 @@ export default function PaymentSettingsPage({ userRole }: Props) {
             <style>{`
         .payment-settings {
           padding: 20px;
+          color: #e2e8f0;
+        }
+        
+        .payment-settings h2 {
+          color: #e2e8f0;
+          margin-bottom: 20px;
         }
         
         .tabs {
           display: flex;
           gap: 10px;
           margin-bottom: 20px;
-          border-bottom: 1px solid #ddd;
+          border-bottom: 1px solid #334155;
         }
         
         .tab {
@@ -490,18 +496,29 @@ export default function PaymentSettingsPage({ userRole }: Props) {
           background: none;
           cursor: pointer;
           border-bottom: 2px solid transparent;
+          color: #94a3b8;
+          transition: all 0.2s;
+        }
+        
+        .tab:hover {
+          color: #e2e8f0;
         }
         
         .tab.active {
-          border-bottom-color: #007bff;
-          color: #007bff;
+          border-bottom-color: #06B6D4;
+          color: #06B6D4;
         }
         
         .section {
           margin-bottom: 30px;
           padding: 20px;
-          background: #f9f9f9;
+          background: #1E293B;
           border-radius: 8px;
+          border: 1px solid #334155;
+        }
+        
+        .section h3 {
+          color: #e2e8f0;
         }
         
         .form-group {
@@ -512,6 +529,7 @@ export default function PaymentSettingsPage({ userRole }: Props) {
           display: block;
           margin-bottom: 5px;
           font-weight: 500;
+          color: #cbd5e1;
         }
         
         .form-group input,
@@ -519,8 +537,20 @@ export default function PaymentSettingsPage({ userRole }: Props) {
         .form-group textarea {
           width: 100%;
           padding: 8px 12px;
-          border: 1px solid #ddd;
+          border: 1px solid #334155;
           border-radius: 4px;
+          background: #0F172A;
+          color: #e2e8f0;
+          box-sizing: border-box;
+        }
+        
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+          color: #64748b;
+        }
+        
+        .form-group select {
+          cursor: pointer;
         }
         
         .checkbox-group {
@@ -533,6 +563,15 @@ export default function PaymentSettingsPage({ userRole }: Props) {
           display: flex;
           align-items: center;
           gap: 5px;
+          color: #cbd5e1;
+        }
+        
+        .toggle-label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #cbd5e1;
+          cursor: pointer;
         }
         
         .button-group {
@@ -545,16 +584,31 @@ export default function PaymentSettingsPage({ userRole }: Props) {
           border: none;
           border-radius: 4px;
           cursor: pointer;
+          transition: all 0.2s;
         }
         
         .btn-primary {
-          background: #007bff;
+          background: #06B6D4;
           color: white;
         }
         
+        .btn-primary:hover:not(:disabled) {
+          background: #0891B2;
+        }
+        
+        .btn-primary:disabled {
+          background: #334155;
+          cursor: not-allowed;
+          color: #64748b;
+        }
+        
         .btn-secondary {
-          background: #6c757d;
-          color: white;
+          background: #334155;
+          color: #e2e8f0;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+          background: #475569;
         }
         
         .alert {
@@ -564,13 +618,15 @@ export default function PaymentSettingsPage({ userRole }: Props) {
         }
         
         .alert-success {
-          background: #d4edda;
-          color: #155724;
+          background: rgba(34, 197, 94, 0.15);
+          color: #4ade80;
+          border: 1px solid rgba(34, 197, 94, 0.3);
         }
         
         .alert-error {
-          background: #f8d7da;
-          color: #721c24;
+          background: rgba(239, 68, 68, 0.15);
+          color: #f87171;
+          border: 1px solid rgba(239, 68, 68, 0.3);
         }
         
         .provider-list {
@@ -584,9 +640,9 @@ export default function PaymentSettingsPage({ userRole }: Props) {
           justify-content: space-between;
           align-items: center;
           padding: 15px;
-          background: white;
+          background: #0F172A;
           border-radius: 4px;
-          border: 1px solid #ddd;
+          border: 1px solid #334155;
         }
         
         .provider-info {
@@ -594,9 +650,13 @@ export default function PaymentSettingsPage({ userRole }: Props) {
           flex-direction: column;
         }
         
+        .provider-info strong {
+          color: #e2e8f0;
+        }
+        
         .provider-methods {
           font-size: 12px;
-          color: #666;
+          color: #94a3b8;
         }
         
         .toggle {
@@ -618,7 +678,7 @@ export default function PaymentSettingsPage({ userRole }: Props) {
           left: 0;
           right: 0;
           bottom: 0;
-          background-color: #ccc;
+          background-color: #334155;
           transition: 0.4s;
           border-radius: 24px;
         }
@@ -630,17 +690,18 @@ export default function PaymentSettingsPage({ userRole }: Props) {
           width: 16px;
           left: 4px;
           bottom: 4px;
-          background-color: white;
+          background-color: #94a3b8;
           transition: 0.4s;
           border-radius: 50%;
         }
         
         input:checked + .slider {
-          background-color: #007bff;
+          background-color: #06B6D4;
         }
         
         input:checked + .slider:before {
           transform: translateX(26px);
+          background-color: white;
         }
         
         .transactions-table {
@@ -652,7 +713,16 @@ export default function PaymentSettingsPage({ userRole }: Props) {
         .transactions-table td {
           padding: 10px;
           text-align: left;
-          border-bottom: 1px solid #ddd;
+          border-bottom: 1px solid #334155;
+        }
+        
+        .transactions-table th {
+          color: #94a3b8;
+          font-weight: 600;
+        }
+        
+        .transactions-table td {
+          color: #e2e8f0;
         }
         
         .status {
@@ -661,19 +731,19 @@ export default function PaymentSettingsPage({ userRole }: Props) {
           font-size: 12px;
         }
         
-        .status-success { background: #d4edda; color: #155724; }
-        .status-failed { background: #f8d7da; color: #721c24; }
-        .status-pending { background: #fff3cd; color: #856404; }
-        .status-refunded { background: #cce5ff; color: #004085; }
+        .status-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+        .status-failed { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+        .status-pending { background: rgba(250, 204, 21, 0.15); color: #fbbf24; }
+        .status-refunded { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
         
         .test-status {
           margin-top: 10px;
           font-size: 12px;
-          color: #666;
+          color: #94a3b8;
         }
         
         .text-muted {
-          color: #666;
+          color: #94a3b8;
           font-size: 14px;
         }
       `}</style>

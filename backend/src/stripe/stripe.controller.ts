@@ -185,7 +185,7 @@ export class StripeWebhookController {
     const teamPriceIds = ['price_team_monthly', 'price_team_yearly'];
     const enterprisePriceIds = ['price_enterprise_monthly', 'price_enterprise_yearly'];
 
-    if (!priceId) return 'PRO';
+    if (!priceId) return 'FREE';
 
     if (enterprisePriceIds.includes(priceId)) return 'ENTERPRISE';
     if (teamPriceIds.includes(priceId)) return 'TEAM';
